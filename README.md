@@ -13,6 +13,7 @@ A production-ready, database-agnostic ORM library for Go 1.22+ with a fluent que
 
 <img width="374" height="794" alt="image" src="https://github.com/user-attachments/assets/7e5d835c-2a7b-43cd-80e5-cfcb34630ca9" />
 
+<img width="1183" height="614" alt="image" src="https://github.com/user-attachments/assets/770e878f-90ca-4550-9b9a-5fe57004887e" />
 
 
 ## Table of Contents

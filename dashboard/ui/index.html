@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>godb Dashboard</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#0f172a;--surface:#1e293b;--border:#334155;
+      --text:#e2e8f0;--muted:#94a3b8;--green:#22c55e;
+      --yellow:#f59e0b;--red:#ef4444;--blue:#3b82f6;--purple:#a855f7;
+    }
+    body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;min-height:100vh}
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:12px}
+    header h1{font-size:20px;font-weight:700;background:linear-gradient(135deg,#3b82f6,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    header .badge{background:var(--blue);color:#fff;font-size:10px;padding:2px 8px;border-radius:9999px;font-weight:600}
+    .token-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;gap:8px;align-items:center}
+    .token-bar input{flex:1;max-width:400px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--text);font-size:13px;outline:none}
+    .token-bar input:focus{border-color:var(--blue)}
+    .btn{background:var(--blue);color:#fff;border:none;border-radius:6px;padding:6px 16px;cursor:pointer;font-size:13px;font-weight:500}
+    .btn:hover{background:#2563eb}
+    .btn.danger{background:var(--red)}
+    main{padding:24px;display:grid;gap:24px}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px}
+    .stat-card .label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+    .stat-card .value{font-size:28px;font-weight:700}
+    .stat-card .value.green{color:var(--green)}
+    .stat-card .value.red{color:var(--red)}
+    .stat-card .value.yellow{color:var(--yellow)}
+    .stat-card .value.blue{color:var(--blue)}
+    .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+    .panel-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .panel-header h2{font-size:15px;font-weight:600}
+    table{width:100%;border-collapse:collapse}
+    th{padding:10px 16px;text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+    td{padding:10px 16px;border-bottom:1px solid #1e293b;font-size:13px;max-width:500px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,.02)}
+    .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+    .tag.SELECT{background:#1d4ed8;color:#bfdbfe}
+    .tag.INSERT{background:#15803d;color:#bbf7d0}
+    .tag.UPDATE{background:#b45309;color:#fde68a}
+    .tag.DELETE{background:#991b1b;color:#fecaca}
+    .tag.slow{background:#92400e;color:#fde68a}
+    .ms{font-variant-numeric:tabular-nums;color:var(--muted)}
+    .ms.fast{color:var(--green)}
+    .ms.slow{color:var(--yellow)}
+    .ms.very-slow{color:var(--red)}
+    .error-msg{color:var(--red);font-size:11px}
+    #toast{position:fixed;bottom:24px;right:24px;background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px 20px;transform:translateY(100px);transition:transform .3s;z-index:999}
+    #toast.show{transform:translateY(0)}
+    .tabs{display:flex;gap:4px;padding:8px 20px;border-bottom:1px solid var(--border)}
+    .tab{padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--muted);border:none;background:none}
+    .tab.active{background:var(--blue);color:#fff}
+    .refresh-info{font-size:11px;color:var(--muted)}
+  </style>
+</head>
+<body>
+<header>
+  <h1>⚡ godb</h1>
+  <span class="badge">PRO</span>
+  <span style="color:var(--muted);font-size:13px;margin-left:8px">Database Monitoring Dashboard</span>
+</header>
+
+<div class="token-bar">
+  <label style="color:var(--muted);font-size:13px">Token:</label>
+  <input type="password" id="tokenInput" placeholder="Enter your dashboard token…"/>
+  <button class="btn" onclick="connect()">Connect</button>
+  <span id="connStatus" style="color:var(--muted);font-size:12px"></span>
+  <span style="flex:1"></span>
+  <span class="refresh-info">Auto-refresh: <span id="nextRefresh">—</span></span>
+</div>
+
+<main>
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="label">Total Queries</div><div class="value blue" id="statTotal">—</div></div>
+    <div class="stat-card"><div class="label">Errors</div><div class="value red" id="statErrors">—</div></div>
+    <div class="stat-card"><div class="label">Slow Queries</div><div class="value yellow" id="statSlow">—</div></div>
+    <div class="stat-card"><div class="label">Threshold</div><div class="value green" id="statThreshold">—</div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h2>Query Explorer</h2>
+      <button class="btn" onclick="loadAll()">Refresh</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('recent',this)">Recent</button>
+      <button class="tab" onclick="switchTab('slow',this)">Slow</button>
+      <button class="tab" onclick="switchTab('top',this)">Top by Time</button>
+      <button class="tab" onclick="switchTab('errors',this)">Errors</button>
+    </div>
+    <div id="tableContainer" style="overflow-x:auto">
+      <table id="queryTable">
+        <thead><tr>
+          <th>Operation</th><th>Duration</th><th>Table</th>
+          <th style="min-width:300px">SQL</th><th>Time</th><th>Error</th>
+        </tr></thead>
+        <tbody id="queryBody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+let TOKEN = '';
+let currentTab = 'recent';
+let refreshTimer;
+
+function connect() {
+  TOKEN = document.getElementById('tokenInput').value.trim();
+  if (!TOKEN) { toast('Enter a token first', true); return; }
+  loadAll();
+  clearInterval(refreshTimer);
+  refreshTimer = setInterval(loadAll, 5000);
+}
+
+async function api(path) {
+  const r = await fetch(path, { headers: { 'X-Dashboard-Token': TOKEN } });
+  if (!r.ok) {
+    const j = await r.json().catch(() => ({}));
+    throw new Error(j.error || r.statusText);
+  }
+  return r.json();
+}
+
+async function loadStats() {
+  try {
+    const d = await api('/api/stats');
+    document.getElementById('statTotal').textContent = d.total_queries.toLocaleString();
+    document.getElementById('statErrors').textContent = d.total_errors.toLocaleString();
+    document.getElementById('statSlow').textContent = d.total_slow.toLocaleString();
+    document.getElementById('statThreshold').textContent = d.threshold_ms + 'ms';
+    document.getElementById('connStatus').textContent = '● Connected';
+    document.getElementById('connStatus').style.color = '#22c55e';
+    updateNextRefresh();
+  } catch(e) {
+    document.getElementById('connStatus').textContent = '✗ ' + e.message;
+    document.getElementById('connStatus').style.color = '#ef4444';
+  }
+}
+
+async function loadTab(tab) {
+  const endpoints = {
+    recent: '/api/queries/recent?limit=50',
+    slow:   '/api/queries/slow?limit=50',
+    top:    '/api/queries/top?limit=30',
+    errors: '/api/queries/errors?limit=30',
+  };
+  try {
+    const d = await api(endpoints[tab]);
+    const rows = d.queries || d.slow_queries || [];
+    renderRows(tab, rows);
+  } catch(e) { toast(e.message, true); }
+}
+
+function renderRows(tab, rows) {
+  const tbody = document.getElementById('queryBody');
+  tbody.innerHTML = '';
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">No data</td></tr>';
+    return;
+  }
+  rows.forEach(r => {
+    const ms = r.duration_ms || r.avg_ms || 0;
+    const msClass = ms < 50 ? 'fast' : ms < 200 ? 'slow' : 'very-slow';
+    const op = r.operation || '-';
+    const opClass = ['SELECT','INSERT','UPDATE','DELETE'].includes(op) ? op : '';
+    const time = r.executed_at ? new Date(r.executed_at).toLocaleTimeString() : (r.last_seen ? new Date(r.last_seen).toLocaleTimeString() : '');
+    const count = r.count ? `×${r.count}` : '';
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td><span class="tag ${opClass}">${op}</span> ${count}</td>
+        <td><span class="ms ${msClass}">${ms.toFixed(2)}ms</span></td>
+        <td style="color:var(--muted)">${r.table||'—'}</td>
+        <td title="${esc(r.sql||r.fingerprint||'')}"><code style="font-size:12px">${esc((r.sql||r.fingerprint||'').substring(0,120))}</code></td>
+        <td style="color:var(--muted)">${time}</td>
+        <td class="error-msg">${esc(r.error||'')}</td>
+      </tr>`);
+  });
+}
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+function switchTab(tab, el) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  loadTab(tab);
+}
+
+function loadAll() {
+  loadStats();
+  loadTab(currentTab);
+}
+
+function updateNextRefresh() {
+  let s = 5;
+  document.getElementById('nextRefresh').textContent = s + 's';
+  const i = setInterval(() => {
+    s--;
+    if(s <= 0){ clearInterval(i); return; }
+    document.getElementById('nextRefresh').textContent = s + 's';
+  }, 1000);
+}
+
+function toast(msg, err) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderColor = err ? '#ef4444' : '#22c55e';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

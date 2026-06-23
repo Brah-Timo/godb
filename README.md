@@ -2,6 +2,11 @@
 
 A production-ready, database-agnostic ORM library for Go 1.22+ with a fluent query builder, automatic migrations, query caching, lifecycle hooks, eager loading, and an embedded web dashboard.
 
+
+<img width="374" height="794" alt="image" src="https://github.com/user-attachments/assets/7e5d835c-2a7b-43cd-80e5-cfcb34630ca9" />
+
+
+
 ## Table of Contents
 
 - [Features](#features)

@@ -3,6 +3,14 @@
 A production-ready, database-agnostic ORM library for Go 1.22+ with a fluent query builder, automatic migrations, query caching, lifecycle hooks, eager loading, and an embedded web dashboard.
 
 
+[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go&logoColor=white)](https://go.dev)
+[![License](https://img.shields.io/badge/License-MIT%20%2F%20Commercial-brightgreen)](LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Brah-Timo/godb)](https://goreportcard.com/report/github.com/Brah-Timo/godb)
+[![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)](https://codecov.io/gh/Brah-Timo/godb)
+[![Performance](https://img.shields.io/badge/throughput-100k%20req%2Fs-orange)](#-benchmarks)
+[![Stars](https://img.shields.io/github/stars/Brah-Timo/godb?style=social)](https://github.com/Brah-Timo/godb/stargazers)
+
+
 <img width="374" height="794" alt="image" src="https://github.com/user-attachments/assets/7e5d835c-2a7b-43cd-80e5-cfcb34630ca9" />
 
 
